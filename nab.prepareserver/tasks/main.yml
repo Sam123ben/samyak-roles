@@ -1,0 +1,153 @@
+---
+# tasks file for nab.prepareserver
+
+      - name: Check and get the login user of the developer macos
+        command: defaults read /Library/Preferences/com.apple.loginwindow lastUserName
+        state: latest
+        register: LOGIN_USER
+      - debug: msg={{ LOGIN_USER.stdout }}
+
+      - name: Mount the samba volume to copy all the files to the local desktop
+        shell: osascript -e 'mount volume "smb://metmm005/samba"'
+        register: mount_status
+        become: yes
+      - debug: msg={{ mount_status.stdout }}
+
+      - name: Ensuring the Mac OS version is compatible or not to proceed with the devSetup or MacMini Setup
+        command: sw_vers -productVersion
+        register: os_version
+
+      - debug: msg={{ os_version.stdout }}
+
+#      - block:
+
+#          - name: Exit or end the playbook as the OS Version is not as expected
+#            shell: echo "Exit or end the playbook as the OS Version is not as expected"
+            
+#          - name: Exit or end the playbook as the OS Version is not as expected
+#            meta: end_play
+
+#        when: ( os_version.stdout != "10.13.1" )
+
+      - name: Mount MACOS Security Update dmg file
+        command: hdiutil attach '{{ destination_path_volume }}/Dev_Installables/{{ macOS_Update }}'
+        args:
+          creates: '/Volumes/Security Update 2017-001/'
+
+      - name: Install MACOS Security Update pkg file
+        command: installer -pkg "/Volumes/Security Update 2017-001/{{ macOS_Update_pkg }}" -target /
+        become: yes
+        become_method: sudo
+        ignore_errors: true
+
+      - name: UnMount MACOS Security Update dmg application
+        command: hdiutil detach '/Volumes/Security Update 2017-001' -force
+        args:
+          removes: '/Volumes/Security Update 2017-001'
+
+      - name: VNC Control Screen Viewer Configuration
+        command: '{{ item }}'
+        with_items:
+          - /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -verbose -deactivate
+          - /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -verbose -activate -restart -agent -allowAccessFor -allUsers -privs -all -clientopts -setvnclegacy -vnclegacy yes
+        become: yes
+
+      - name: Bringing down the volume to minimum from the default value
+        command: osascript -e "set Volume 2"
+        become: yes
+
+      - user:
+          name: '{{ LOGIN_USER.stdout }}'
+          generate_ssh_key: yes
+          ssh_key_bits: 2048
+          ssh_key_file: .ssh/id_{{ LOGIN_USER.stdout }}_rsa
+        become: true
+        
+      - name: Change the ownership of the key (.ssh) folder
+        shell: chown -R '{{ LOGIN_USER.stdout }}':staff /Users/'{{ LOGIN_USER.stdout }}'/.ssh
+        become: true
+
+      - name: Check current Wi-Fi Status
+        command: networksetup -getairportpower en1
+        register: WiFi_STATUS
+        ignore_errors: true
+      
+      - name: Check current Wi-Fi Status
+        command: networksetup -getairportpower en0
+        register: WiFi_STATUS
+        ignore_errors: true
+        
+      - debug: msg={{ WiFi_STATUS.stdout }}
+
+      - name: Switch WiFi OFF if it is found ON and Switching to Location - Automatic
+        command: "{{ item }}"
+        with_items:
+          - networksetup -setairportpower en1 off
+        ignore_errors: true
+        when: WiFi_STATUS.stdout.find('On')
+
+      - name: Switch WiFi OFF if it is found ON and Switching to Location - Automatic
+        command: "{{ item }}"
+        with_items:
+          - networksetup -setairportpower en0 off
+        ignore_errors: true
+        when: WiFi_STATUS.stdout.find('On')
+
+      - block:
+          - file: path=/Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts state=directory
+      
+          - name: Copy the relevant script to the local desktop in order to execute the same
+            shell: echo "Copy all the relevant automation scripts"
+
+          - copy:
+              src: "{{ item }}"
+              dest: /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts
+              force: no
+              owner: "{{ LOGIN_USER.stdout }}"
+              group: staff
+              mode: 0777
+            with_items:
+              - scripts/
+              - '/Users/jenkins/Desktop/Dev_Setup_Scripts/'
+
+      - block:
+          - name: Check if PowerShell is already installed
+            stat: path=/usr/local/bin/pwsh
+            register: pwsh_dir
+
+          - name: Install PowerShell Script pkg file
+            command: installer -pkg "{{ powershell_path }}" -target /
+            become: yes
+            become_method: sudo
+            when: pwsh_dir.stat.exists == False
+          
+          - name: Check if installation went on successfully
+            shell: /usr/local/bin/pwsh -version
+            register: pwsh_install_check
+          - debug: msg={{ pwsh_install_check.stdout }}
+
+      - name: Check to see if there is an Ethernet adapter and set proxy settings
+        command: /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/check_ethernet_connection.ps1
+        register: ethernet_status
+
+      - debug: msg={{ ethernet_status.stdout }}
+
+      - block:
+          - name: Exit the script as it is not connected to Ethernet cable as expected
+            shell: echo "Exit the script as it is not connected to Ethernet cable as expected"
+          - meta: end_play
+        when: ethernet_status.stdout.find("")
+
+      - name: Provide the information regarding the script to the user/developer
+        command: /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/user_info.ps1
+        register: information_output
+      - debug: var=information_output.stdout_lines
+
+      - name: Create NAB location and Setting up location to NAB from Automatic
+        command: '{{ item }}'
+        with_items:
+          - networksetup -deletelocation NAB '||' true
+          - networksetup -createlocation NAB populate
+          - networksetup -switchtolocation NAB
+          - networksetup -setautoproxyurl "Wi-Fi" {{ PROXY_URL }}
+          - networksetup -setproxybypassdomains "Wi-Fi" {{ BYPASS_PROXY }}

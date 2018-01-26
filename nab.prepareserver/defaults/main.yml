@@ -1,0 +1,9 @@
+---
+# defaults file for nab.prepareserver
+
+PROXY_URL: "http://pac.nab.com.au/aur.national.com.au/proxy.pac"
+destination_path_volume: "/Volumes/samba"
+macOS_Update: "macOSUpd10.13.1Supplemental.dmg"
+macOS_Update_pkg: "macOSUpd10.13.1Supplemental.pkg"
+powershell_path: "/Volumes/samba/Dev_Installables/powershell-6.0.0-rc-osx.10.12-x64.pkg"
+BYPASS_PROXY: "*.local, 169.254/16, webmail.nab.com.au, *.aur.national.com.au, *.aus.thenational.com, mail.google.com, wwwim.au.thenational.com, artifactory-dev.mob.esg.cd.non.whu.nab.com.au, intranetweb.au.thenational.com, wwwim.au.thenational.com, localhost, api.nab.com.au, *.mob.cd.non.whu.nab.com.au, *.espdev.aurdev.national.com.au, *.esg.cd.non.whu.nab.com.au, *.aurdev.national.com.au"

@@ -1,0 +1,61 @@
+---
+# tasks file for nab.installbrowser
+
+      - name: Check if Chrome is already installed
+        stat: path='/Applications/Google Chrome.app'
+        register: chrome_app_path
+
+      - name: Check if Mozilla FireFox is already installed
+        stat: path=/Applications/Firefox.app
+        register: firefox_app_path
+
+      - block:
+      
+          - block:
+              - name: Mount Chrome dmg file
+                command: hdiutil attach '{{ chrome_path }}'
+                args:
+                  creates: '/Volumes/Google Chrome/'
+
+              - name: Move the chrome application from volumes to Application folder
+                command: cp -a '/Volumes/Google Chrome/Google Chrome.app' /Applications/
+                args:
+                  creates: '/Applications/Google Chrome.app/'
+
+              - name: UnMount google chrome dmg application
+                command: hdiutil detach '/Volumes/Google Chrome' -force
+                args:
+                  removes: '/Volumes/Google Chrome'
+            when: chrome_app_path.stat.exists == False      
+          
+          - pause:
+            seconds: 5
+
+          - block:
+
+              - name: Mount FireFox dmg file
+                command: hdiutil attach {{ destination_path_volume }}/Dev_Installables/{{ firefox_dmg }}
+                args:
+                  creates: /Volumes/Firefox/
+          
+              - name: install FireFox application
+                command: cp -a /Volumes/Firefox/Firefox.app /Applications/
+                args:
+                  creates: /Applications/Firefox.app/
+
+              - name: UnMount FireFox dmg application
+                command: hdiutil detach /Volumes/Firefox -force
+                args:
+                  removes: /Volumes/Firefox/
+            when: firefox_app_path.stat.exists == False
+
+      - pause:
+           seconds: 5
+
+      - name: Import the FireFox Certificates
+        shell: '{{ item }}'
+        no_log: true
+        with_items:
+          - /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/install_firefox_certificates.ps1
+        become: true
+        ignore_error: true

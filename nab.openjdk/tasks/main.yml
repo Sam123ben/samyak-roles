@@ -1,0 +1,63 @@
+---
+# tasks file for nab.openjdk
+
+    - name: Check if Java is Installed
+      command: java -version
+      register: check_java_version
+      changed_when: False
+      ignore_errors: true
+      always_run: yes
+
+    - debug: msg={{ check_java_version }}
+
+    - name: Include OS-specific variables.
+      include_vars: "{{ ansible_os_family }}.yml"
+      when: ansible_distribution != 'Ubuntu' or ansible_distribution != 'Fedora'
+
+    - name: Include OS-specific variables for Fedora.
+      include_vars: "{{ ansible_distribution }}.yml"
+      when: ansible_distribution == 'Fedora'
+
+    - name: Include version-specific variables for Ubuntu.
+      include_vars: "{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml"
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Define java_packages.
+      set_fact:
+        java_packages: "{{ __java_packages | list }}"
+      when: java_packages is not defined
+
+# Setup/install tasks.
+
+    - block:
+
+        - include: install-java-RedHat.yml
+          when: ansible_os_family == 'RedHat'
+          static: no
+
+        - include: install-java-Debian.yml
+          when: ansible_os_family == 'Debian'
+          static: no
+
+        - include: install-java-FreeBSD.yml
+          when: ansible_os_family == 'FreeBSD'
+          static: no
+
+        - include: install-java-mac.yml
+          when: ansible_os_family == 'Darwin'
+
+      when: check_java_version.rc != 0
+
+
+# Environment setup.
+    - name: Set JAVA_HOME if configured.
+      template:
+        src: java_home.sh.j2
+        dest: /etc/profile.d/java_home.sh
+        mode: 0644
+      when: java_home is defined and java_home != ''
+
+
+
+#    - name: Copy and Inflate the profiles from FireFox to your local Mozilla Firefox application
+#      command: /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/firefox_certificates.ps1
