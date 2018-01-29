@@ -1,0 +1,5 @@
+---
+# defaults file for samyak.install_xcode_installer
+
+xcode_command_utility_path: '/Volumes/samba/Dev_Installables/Xcode/Command_Line_Tools_macOS_10.13_for_Xcode_9.0.1.dmg'
+xcode_version: '9.1'

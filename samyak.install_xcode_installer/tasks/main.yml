@@ -1,0 +1,69 @@
+---
+# tasks file for samyak.install_xcode_installer
+
+          - block:
+
+              - name: Mount Command Line Utility dmg file
+                command: hdiutil attach "{{ xcode_command_utility_path }}"
+                args:
+                  creates: '/Volumes/Command Line Developer Tools/'
+
+              - name: Install Command Line Utility pkg file
+                command: installer -pkg "/Volumes/Command Line Developer Tools/Command Line Tools (macOS High Sierra version 10.13).pkg" -target /
+                become: yes
+                become_method: sudo
+
+              - name: UnMount Command Line Utility dmg application
+                command: hdiutil detach '/Volumes/Command Line Developer Tools' -force
+                args:
+                  removes: '/Volumes/Command Line Developer Tools'
+  
+            when: cli_util_stat.stat.exists == False
+
+          - block:
+
+              - name: Install Xcode from tar file Location
+#                command: bash -c 'open -FWga "Archive Utility" --args {{ xcode_installer_path }}'
+                command: tar -xf /Volumes/samba/Dev_Installables/Xcode/xcode-{{ xcode_version }}.tar -C /Applications/
+
+              - name: Move Xcode To Application
+                command: bash -c 'mv /Applications/Xcode.app /Applications/Xcode-{{ xcode_version }}.app'
+                ignore_errors: true
+
+              - name: Switch the older to a newer version installed
+                command: xcode-select --switch /Applications/Xcode-{{ xcode_version }}.app
+                become: true
+
+              - name: Provide the license to the newly installed application (Xcode)
+                command: xcodebuild -license accept
+                become: true
+
+              - name: install mobile device package
+                command: installer -pkg /Applications/Xcode-{{ xcode_version }}.app/Contents/Resources/Packages/MobileDevice.pkg -target /
+                become: yes
+
+              - name: install mobile device development package
+                command: installer -pkg /Applications/Xcode-{{ xcode_version }}.app/Contents/Resources/Packages/MobileDeviceDevelopment.pkg -target /
+                become: yes
+
+              - name: install Xcode System Resources package
+                command: installer -pkg /Applications/Xcode-{{ xcode_version }}.app/Contents/Resources/Packages/XcodeSystemResources.pkg -target /
+                become: yes
+
+              - name: install additional xcode components
+                command: installer -pkg /Applications/Xcode-{{ xcode_version }}.app/Contents/Resources/Packages/XcodeSystemResources.pkg -target /
+                become: yes
+
+            when: xcode_app_stat.stat.exists == False
+
+          - name: check on the status of developer mode
+            command: DevToolsSecurity -status
+            become: yes
+            become_method: sudo
+            register: dev_tools_security_status
+
+          - name: enable developer mode
+            command: DevToolsSecurity -enable
+            become: yes
+            become_method: sudo
+            when: "'disabled' in dev_tools_security_status.stdout"

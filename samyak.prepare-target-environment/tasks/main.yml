@@ -176,3 +176,9 @@
            mode: 777
         ignore_errors: true
         when: bashrc_file_path.stat.exists == false
+
+      - name: Prioritize the WiFi network for the Automatic location
+        command: /usr/local/bin/pwsh "/Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/network_ordersetup.ps1"
+        register: ORDER_NETWORK
+
+      - debug: msg={{ ORDER_NETWORK.stdout }}
