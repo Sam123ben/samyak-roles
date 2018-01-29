@@ -34,7 +34,7 @@
             when: chrome_app_path.stat.exists == False      
           
           - pause:
-            seconds: 5
+              seconds: 5
 
           - block:
 
@@ -65,6 +65,7 @@
           group: staff
           mode: 0777
         with_items:
-          - /Users/{{ REMOTE_LOGIN_USER }}/Desktop/Dev_Setup_Scripts/org.caffeinate.plist
-          - /Users/{{ REMOTE_LOGIN_USER }}/Desktop/Dev_Setup_Scripts/org.jenkins.jenkins-slave.wrapper.plist
-          - /Users/{{ REMOTE_LOGIN_USER }}/Desktop/Dev_Setup_Scripts/slave.jar
+          - /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/org.caffeinate.plist
+          - /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/org.jenkins.jenkins-slave.wrapper.plist
+          - /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/slave.jar
+        ignore_error: true
