@@ -143,3 +143,36 @@
           - networksetup -switchtolocation NAB
           - networksetup -setautoproxyurl "Wi-Fi" {{ PROXY_URL }}
           - networksetup -setproxybypassdomains "Wi-Fi" {{ BYPASS_PROXY }}
+
+      - name: Backup the user profile file if existing and delete the same
+        shell: '{{ item }}'
+        with_items:
+          - cp $HOME/.bash_profile ~/.bash_profile_`date +%Y%m%d-%H%M%S`
+        ignore_errors: true
+        when: bashrc_file_path.stat.exists
+
+      - lineinfile:
+        path: $HOME/.bash_profile
+        line: '. $HOME/.nab_profile'
+        ignore_errors: true
+        when: bashrc_file_path.stat.exists
+
+      - name: Create a new bash_profile script
+        template: 
+           src: nab_profile.j2
+           dest: '$HOME/.bash_profile'
+           owner: '{{ LOGIN_USER.stdout }}'
+           group: staff
+           mode: 777
+        ignore_errors: true
+        when: bashrc_file_path.stat.exists
+
+      - name: Create a new bash_profile script
+        template: 
+           src: nab_profile.j2
+           dest: '$HOME/.bash_profile'
+           owner: '{{ LOGIN_USER.stdout }}'
+           group: staff
+           mode: 777
+        ignore_errors: true
+        when: bashrc_file_path.stat.exists == false
