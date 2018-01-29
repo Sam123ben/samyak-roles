@@ -143,7 +143,7 @@
         register: information_output
       - debug: var=information_output.stdout_lines
 
-      - name: Create NAB location and Setting up location to NAB from Automatic
+      - name: Delete if exist and Create NAB location and Setting up location to NAB from Automatic
         command: '{{ item }}'
         with_items:
           - networksetup -deletelocation NAB '||' true
