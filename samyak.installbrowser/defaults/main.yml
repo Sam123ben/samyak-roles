@@ -1,7 +1,0 @@
----
-# defaults file for nab.installbrowser
-
-chrome_path: '/Volumes/samba/Dev_Installables/googlechrome.dmg'
-destination_path_volume: "/Volumes/samba"
-firefox_dmg: "Firefox_57.0.dmg"
-launch_jenkins_path: 'Library/LaunchAgents/'
