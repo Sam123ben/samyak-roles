@@ -1,2 +1,62 @@
 ---
-# tasks file for samyak.install-webbrowsers
+
+      - name: Get the login user name
+        command: defaults read /Library/Preferences/com.apple.loginwindow lastUserName
+        state: latest
+        register: LOGIN_USER
+      - debug: msg={{ LOGIN_USER.stdout }}
+
+      - block:
+      
+          - block:
+              - name: Mount Chrome dmg file
+                command: hdiutil attach '{{ chrome_path }}'
+                args:
+                  creates: '/Volumes/Google Chrome/'
+
+              - name: Move the chrome application from volumes to Application folder
+                command: cp -a '/Volumes/Google Chrome/Google Chrome.app' /Applications/
+                args:
+                  creates: '/Applications/Google Chrome.app/'
+
+              - name: UnMount google chrome dmg application
+                command: hdiutil detach '/Volumes/Google Chrome' -force
+                args:
+                  removes: '/Volumes/Google Chrome'
+            when: chrome_app_path.stat.exists == False      
+          
+          - pause:
+            seconds: 5
+
+          - block:
+
+              - name: Mount FireFox dmg file
+                command: hdiutil attach {{ destination_path_volume }}/Dev_Installables/{{ firefox_dmg }}
+                args:
+                  creates: /Volumes/Firefox/
+          
+              - name: install FireFox application
+                command: cp -a /Volumes/Firefox/Firefox.app /Applications/
+                args:
+                  creates: /Applications/Firefox.app/
+
+              - name: UnMount FireFox dmg application
+                command: hdiutil detach /Volumes/Firefox -force
+                args:
+                  removes: /Volumes/Firefox/
+            when: firefox_app_path.stat.exists == False
+
+      - pause:
+           seconds: 5
+
+      - copy:
+          src: "{{ item }}"
+          dest: '/Users/{{ LOGIN_USER.stdout }}/{{ launch_jenkins_path }}'
+          force: no
+          owner: "{{ LOGIN_USER.stdout }}"
+          group: staff
+          mode: 0777
+        with_items:
+          - /Users/{{ REMOTE_LOGIN_USER }}/Desktop/Dev_Setup_Scripts/org.caffeinate.plist
+          - /Users/{{ REMOTE_LOGIN_USER }}/Desktop/Dev_Setup_Scripts/org.jenkins.jenkins-slave.wrapper.plist
+          - /Users/{{ REMOTE_LOGIN_USER }}/Desktop/Dev_Setup_Scripts/slave.jar
