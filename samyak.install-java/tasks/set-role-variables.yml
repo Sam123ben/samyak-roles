@@ -31,6 +31,11 @@
 #
 # version-specific variables
 #
+- name: set internal vars for 1.8.0_161
+  set_fact:
+    jdk_version_detail: "{{ java_version }}u{{ java_subversion }}-b12"
+  when: java_version == 8 and java_subversion == 161
+
 - name: set internal vars for 1.8.0_112
   set_fact:
     jdk_version_detail: "{{ java_version }}u{{ java_subversion }}-b15"
@@ -132,6 +137,10 @@
     jdk_tarball_url:  "http://download.oracle.com/otn-pub/java/jdk/{{ jdk_version_detail }}/{{ jdk_tarball_file }}"
   when: jdk_version_detail is defined
 
+- name: compose url for downloading file, if necessary
+  set_fact:
+    jdk_dmg_url:  "http://download.oracle.com/otn-pub/java/jdk/{{ jdk_version_detail }}/2f38c3b165be4555a1fa6e98c45e0808/{{ jdk_tarball_file }}"
+  when: jdk_version_detail is defined
 
 #
 # JCE variables
