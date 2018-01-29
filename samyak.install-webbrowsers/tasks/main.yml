@@ -54,6 +54,8 @@
                   removes: /Volumes/Firefox/
             when: firefox_app_path.stat.exists == False
 
+      ignore_errors: yes
+
       - pause:
            seconds: 5
 
@@ -68,4 +70,4 @@
           - /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/org.caffeinate.plist
           - /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/org.jenkins.jenkins-slave.wrapper.plist
           - /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/slave.jar
-        ignore_error: true
+        ignore_errors: yes
