@@ -1,6 +1,0 @@
----
-# defaults file for nab.openjdk
-
-java_home: ""
-destination_path_volume: "/Volumes/samba"
-java_dmg_name: "jdk-8u151-macosx-x64.dmg"
