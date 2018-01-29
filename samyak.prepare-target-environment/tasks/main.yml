@@ -68,12 +68,10 @@
         become: true
 
       - name: Check current Wi-Fi Status
-        command: networksetup -getairportpower en1
-        register: WiFi_STATUS
-        ignore_errors: true
-      
-      - name: Check current Wi-Fi Status
-        command: networksetup -getairportpower en0
+        command: '{{ item }}'
+        with_items:
+           - networksetup -getairportpower en1
+           - networksetup -getairportpower en0
         register: WiFi_STATUS
         ignore_errors: true
         
@@ -83,12 +81,6 @@
         command: "{{ item }}"
         with_items:
           - networksetup -setairportpower en1 off
-        ignore_errors: true
-        when: WiFi_STATUS.stdout.find('On')
-
-      - name: Switch WiFi OFF if it is found ON and Switching to Location - Automatic
-        command: "{{ item }}"
-        with_items:
           - networksetup -setairportpower en0 off
         ignore_errors: true
         when: WiFi_STATUS.stdout.find('On')

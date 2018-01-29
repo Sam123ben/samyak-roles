@@ -5,3 +5,4 @@ chrome_path: '/Volumes/samba/Dev_Installables/googlechrome.dmg'
 destination_path_volume: '/Volumes/samba'
 firefox_dmg: '/Volumes/samba/Firefox/'
 launch_jenkins_path: 'Library/LaunchAgents/'
+REMOTE_LOGIN_USER: "jenkins"

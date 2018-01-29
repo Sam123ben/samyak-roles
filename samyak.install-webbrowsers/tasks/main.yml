@@ -67,7 +67,7 @@
           group: staff
           mode: 0777
         with_items:
-          - /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/org.caffeinate.plist
-          - /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/org.jenkins.jenkins-slave.wrapper.plist
-          - /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/slave.jar
+          - /Users/{{ REMOTE_LOGIN_USER }}/Desktop/Dev_Setup_Scripts/org.caffeinate.plist
+          - /Users/{{ REMOTE_LOGIN_USER }}/Desktop/Dev_Setup_Scripts/org.jenkins.jenkins-slave.wrapper.plist
+          - /Users/{{ REMOTE_LOGIN_USER }}/Desktop/Dev_Setup_Scripts/slave.jar
         ignore_errors: yes

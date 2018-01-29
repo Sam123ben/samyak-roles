@@ -1,0 +1,61 @@
+---
+# tasks file for samyak.install-certificates
+
+      - name: Check and get the login user of the developer macos
+        command: defaults read /Library/Preferences/com.apple.loginwindow lastUserName
+        state: latest
+        register: LOGIN_USER
+      - debug: msg={{ LOGIN_USER.stdout }}
+
+      - name: Unzip all the zip files
+        unarchive:
+         src: '{{ item }}'
+         dest: '/Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts'     
+        with_items:
+          - '/Users/{{ REMOTE_LOGIN_USER }}/Desktop/Dev_Setup_Scripts/NAB_Internal_Issuing_and_Root_CA.zip'
+          - '/Users/{{ REMOTE_LOGIN_USER }}/Desktop/Dev_Setup_Scripts/NAB_Internal_Issuing_CA-EMELP01.zip'
+          - '/Users/{{ REMOTE_LOGIN_USER }}/Desktop/Dev_Setup_Scripts/NAB_Internal_Issuing_CA-EMELP02.zip'
+          - '/Users/{{ REMOTE_LOGIN_USER }}/Desktop/Dev_Setup_Scripts/NAB_Internal_Issuing_CA-KNOX_P01.zip'
+          - '/Users/{{ REMOTE_LOGIN_USER }}/Desktop/Dev_Setup_Scripts/NAB_Internal_Issuing_CA-KNOX_P02.zip'
+
+      - name: Import the FireFox Certificates
+        shell: '{{ item }}'
+        no_log: true
+        with_items:
+          - /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/firefox_certificates.ps1
+        become: true
+        ignore_error: true
+
+      - name: Import NAB CA certificates into system and login keychain
+        shell: '{{ item }}'
+        no_log: true
+        with_items:
+          - /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/install_nab_developer_certs.ps1 -key_pwd {{ key_pwd }}
+        become: true
+        ignore_error: true
+
+      - name: Import Apple Developer NAB CA certificates into system keychain
+        shell: '{{ item }}'
+        no_log: true
+        with_items:
+          - sudo security add-trusted-cert -d -r trustAsRoot -k ~/Library/Keychains/login.keychain /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/'Developer ID Certification Authority.cer'
+          - sudo security add-trusted-cert -d -r trustAsRoot -k ~/Library/Keychains/login.keychain /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/'Apple Worldwide Developer Relations Certification Authority.cer'
+          - sudo security add-trusted-cert -d -r trustAsRoot -k ~/Library/Keychains/login.keychain /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/'Apple iPhone OS Provisioning Profile Signing.cer'
+          - sudo security add-trusted-cert -d -r trustAsRoot -k ~/Library/Keychains/login.keychain /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/'Apple iPhone Certification Authority.cer'
+          - sudo security add-trusted-cert -d -r trustAsRoot -k ~/Library/Keychains/login.keychain /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/'NAB Internal Issuing CA.cer'
+          - sudo security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/'NAB Internal Root CA.cer'
+          - sudo security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/'Apple Root Certificate Authority.cer'
+        become: true
+        ignore_errors: true
+        become_user: '{{ LOGIN_USER.stdout }}'
+
+      - name: Import iPhone Developer NAB CA certificates into system keychain
+        shell: '{{ item }}'
+        no_log: true
+        with_items:
+          - sudo security import /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/'iPhone Developer- NAB Developer (5X44P8V9DD).p12' -k ~/Library/Keychains/login.keychain -P {{ key_pwd }} -A
+          - sudo security import /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/'iPhone Distribution- National Australia Bank Limited.p12' -k ~/Library/Keychains/login.keychain -P {{ key_pwd }} -A
+          - sudo security import /Users/{{ LOGIN_USER.stdout }}/Desktop/Dev_Setup_Scripts/'iPhone Developer- NAB Developer (JB5VD339BR).p12' -k ~/Library/Keychains/login.keychain -P {{ key_pwd }} -A
+        become: true
+        ignore_errors: true
+        become_user: '{{ LOGIN_USER.stdout }}'
