@@ -1,5 +1,13 @@
 ---
 
+      - name: Check if Chrome is already installed
+        stat: path='/Applications/Google Chrome.app'
+        register: chrome_app_path
+
+      - name: Check if Mozilla FireFox is already installed
+        stat: path=/Applications/Firefox.app
+        register: firefox_app_path
+
       - name: Get the login user name
         command: defaults read /Library/Preferences/com.apple.loginwindow lastUserName
         state: latest
